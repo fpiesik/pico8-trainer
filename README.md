@@ -53,3 +53,4 @@ Diese Adresse ist die vorgesehene Zieladresse; das Anlegen der lokalen Dateien a
 Nächster Lernschritt: Copy & Paste und Rückgängigmachen in einem sicheren Übungsfeld. Danach Pixelgrafik, erste PICO-8-Befehle, Geschichten und Sounds. Diese Funktionen sind noch nicht implementiert.
 
 PICO Playground ist ein eigenständiges Lernprojekt und kein offizielles Produkt von PICO-8 oder Lexaloffle.
+-
