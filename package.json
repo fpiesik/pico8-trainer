@@ -1,0 +1,13 @@
+{
+  "name": "pico8-trainer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ein spielerischer Computer-Einstieg für zukünftige PICO-8-Spielentwickler.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" }
+}
