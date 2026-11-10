@@ -1,6 +1,6 @@
 # PICO Playground
 
-Ein deutschsprachiger Browser-Trainer für Fünftklässler auf dem Weg zum eigenen PICO-8-Spiel. Level 01 führt ohne Zeitdruck durch zwölf Tasten und erklärt nach jedem Treffer, wozu sie dienen. Programmierung, Grafikdesign, Storytelling und Sounddesign bilden die langfristige Lernreise; weitere Level sind aktuell als „In Vorbereitung“ gekennzeichnet.
+Ein deutschsprachiger Browser-Trainer für Fünftklässler auf dem Weg zum eigenen PICO-8-Spiel. Level 01 ist ein einminütiger Sprint, in dem möglichst viele verschiedene Tasten gefunden werden. Level 02 übt Tastenkürzel sowie Shift- und AltGr-Doppelbelegungen direkt in einem Textfeld.
 
 ## Lokal starten
 
@@ -32,15 +32,14 @@ Diese Adresse ist die vorgesehene Zieladresse; das Anlegen der lokalen Dateien a
 
 ## Lernen und Bedienung
 
-- Zwölf Missionen: Leertaste, Enter, vier Pfeiltasten, Escape, Umschalt, Strg, Rücktaste, A und Z.
-- „Ein kleiner Tipp“ erklärt die Lage und hebt die gesuchte Taste hervor.
-- Nach jedem Treffer bleibt die Erklärung stehen, bis „Nächste Taste“ gewählt wird.
-- Keine Zeitbegrenzung, Punktabzüge oder Ranglisten.
-- Echte Tastatur als Standard. Der Bildschirmmodus funktioniert mit Maus oder Touch und speichert einen eigenen Fortschritt.
+- Level 01: In 60 Sekunden werden bis zu zwölf verschiedene Tasten in zufälliger Reihenfolge gesucht. Nach jedem Treffer geht es automatisch weiter; die Bestleistung wird getrennt für echte Tastatur und Bildschirmmodus gespeichert.
+- Level 02 wird nach dem ersten Sprint freigeschaltet und übt Strg/Command + A, C, V, X, Z und Y sowie Shift- und AltGr-Zeichen wie `_`, `=`, `?`, Klammern, `@` und `€`.
+- „Ein kleiner Tipp“ erklärt die gesuchte Taste oder Tastenkombination.
+- Level 1 funktioniert mit echter Tastatur oder im Bildschirmmodus. Level 2 benötigt eine echte Tastatur und nutzt ein lokales Textfeld zum Ausprobieren der Kürzel.
 - Die abgebildete Tastatur ist eine vereinfachte deutsche QWERTZ-Orientierung, keine maßstabsgetreue Abbildung jedes Geräts. Buchstaben werden über `KeyboardEvent.key` erkannt, damit andere Layouts funktionieren. Linke und rechte Umschalt-/Strg-Tasten zählen gleichermaßen.
 - Tab bleibt für die Navigation frei; Browserkürzel werden nicht abgefangen. Hilfe ist über den Fragezeichen-Knopf erreichbar.
-- „Neu starten“ setzt den aktuellen Modus zurück. Auf gemeinsam genutzten Schulrechnern vor einem Schülerwechsel neu starten.
-- `localStorage` speichert ausschließlich die Anzahl gefundener Tasten pro Modus. Keine Namen, Konten, Cookies, externen Schriftarten, Analytics oder Netzwerkanfragen der Anwendung. Bei blockiertem Speicher bleibt das Spiel nutzbar; GitHub Pages selbst verarbeitet als Hosting-Anbieter Verbindungsdaten.
+- „Neu starten“ startet die aktuelle Übung von vorn. Auf gemeinsam genutzten Schulrechnern vor einem Schülerwechsel den Browser-Speicher löschen.
+- `localStorage` speichert ausschließlich die Bestleistungen pro Level-1-Modus und den Zugang zu Level 2. Keine Namen, Konten, Cookies, externen Schriftarten, Analytics oder Netzwerkanfragen der Anwendung. Bei blockiertem Speicher bleibt das Spiel nutzbar; GitHub Pages selbst verarbeitet als Hosting-Anbieter Verbindungsdaten.
 - Auf kleinen Bildschirmen kann die Tastatur horizontal gescrollt werden. Animationen beachten „Bewegung reduzieren“.
 
 ## Weiterentwickeln
@@ -50,7 +49,7 @@ Diese Adresse ist die vorgesehene Zieladresse; das Anlegen der lokalen Dateien a
 - [src/styles.css](src/styles.css): responsives Design ohne externe Assets.
 - [tests/game.test.js](tests/game.test.js): automatisierte Tests für Lerninhalte, Tastenerkennung und Speicherstände.
 
-Nächster Lernschritt: Copy & Paste und Rückgängigmachen in einem sicheren Übungsfeld. Danach Pixelgrafik, erste PICO-8-Befehle, Geschichten und Sounds. Diese Funktionen sind noch nicht implementiert.
+Nächster Lernschritt: Pixelgrafik, erste PICO-8-Befehle, Geschichten und Sounds.
 
 PICO Playground ist ein eigenständiges Lernprojekt und kein offizielles Produkt von PICO-8 oder Lexaloffle.
 -

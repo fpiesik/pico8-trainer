@@ -1,15 +1,36 @@
-import { missions, matchesKey, readProgress, keyboardRows } from './game.js';
+import {
+  missions,
+  levelDurationSeconds,
+  level2Exercises,
+  matchesKey,
+  matchesExercise,
+  readProgress,
+  keyboardRows,
+} from './game.js';
 
 const $ = selector => document.querySelector(selector);
 const storageKey = 'pico-playground.progress.v1';
+const levelStorageKey = 'pico-playground.levels.v1';
 let saved;
+let levelState = { level2Unlocked: false };
 let storageAvailable = true;
 try { saved = readProgress(localStorage.getItem(storageKey)); }
 catch { saved = readProgress(null); storageAvailable = false; }
+try {
+  const stored = JSON.parse(localStorage.getItem(levelStorageKey));
+  if (stored?.version === 1 && stored.level2Unlocked === true) levelState.level2Unlocked = true;
+} catch {
+  storageAvailable = false;
+}
+
 let mode = 'keyboard';
-let index = saved[mode];
+let level = 1;
+let index = 0;
 let phase = 'ready';
 let hinted = false;
+let runOrder = [];
+let deadline = 0;
+let timerId;
 const held = new Set();
 const keyElements = [];
 
@@ -27,7 +48,7 @@ for (const row of keyboardRows) {
     button.disabled = true;
     button.setAttribute('aria-label', missions.find(m => m.key === key)?.name ?? label);
     button.addEventListener('click', () => {
-      if (mode === 'screen' && phase === 'active') answer({ key });
+      if (level === 1 && mode === 'screen' && phase === 'active') answerKey({ key });
     });
     keyElements.push(button);
     if (key.startsWith('Arrow')) {
@@ -44,17 +65,29 @@ for (const row of keyboardRows) {
   $('#keyboard').append(element);
 }
 
-function save() {
-  saved[mode] = index;
+function saveProgress() {
   try { localStorage.setItem(storageKey, JSON.stringify({ version: 1, ...saved })); }
+  catch { storageAvailable = false; }
+  updateSaveNote();
+}
+
+function saveLevelState() {
+  try { localStorage.setItem(levelStorageKey, JSON.stringify({ version: 1, ...levelState })); }
   catch { storageAvailable = false; }
   updateSaveNote();
 }
 
 function updateSaveNote() {
   $('#save-note').textContent = storageAvailable
-    ? 'Automatisch gespeichert, auf diesem Gerät.'
+    ? 'Bestleistungen und Levelzugang werden automatisch auf diesem Gerät gespeichert.'
     : 'Speichern ist blockiert. Du kannst trotzdem spielen.';
+}
+
+function clearTimer() {
+  if (timerId !== undefined) {
+    clearInterval(timerId);
+    timerId = undefined;
+  }
 }
 
 function clearKeys() {
@@ -62,100 +95,252 @@ function clearKeys() {
   keyElements.forEach(key => key.classList.remove('pressed'));
 }
 
+function currentExercise() {
+  return level2Exercises[index];
+}
+
+function updateTimer() {
+  const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+  $('#mission-count').textContent = `${seconds} Sek. · ${index} / ${missions.length} Tasten`;
+  if (seconds === 0) finishLevel1();
+}
+
 function render() {
-  const complete = index === missions.length;
+  const complete = phase === 'complete';
   const active = phase === 'active';
-  const feedback = phase === 'feedback';
-  const mission = missions[Math.min(index, missions.length - 1)];
-  $('#progress-fill').style.width = `${index / missions.length * 100}%`;
-  $('.progress-track').setAttribute('aria-valuenow', String(index));
-  $('#mission-count').textContent = `${index} / ${missions.length} Tasten entdeckt`;
-  $('#game').classList.toggle('is-success', feedback || complete);
+  const exercise = level === 2 ? currentExercise() : null;
+  const targetCount = level === 1 ? missions.length : level2Exercises.length;
+  const shownIndex = Math.min(index, targetCount);
+  const best = saved[mode];
+
+  $('.breadcrumb strong').textContent = `Level 0${level}`;
+  $('.page-heading .eyebrow').textContent = level === 1 ? 'DEIN ERSTER SCHRITT' : 'ZEIT FÜR TASTENTRICKS';
+  $('.page-heading h1').innerHTML = level === 1 ? 'Finde die Taste<span>.</span>' : 'Coole Tastentricks<span>.</span>';
+  $('.page-heading p').textContent = level === 1
+    ? 'Eine Tastatur. Viele Möglichkeiten. Lerne sie kennen!'
+    : 'Mit Tastenkombinationen und Sonderzeichen geht’s schneller.';
+  $('.level-badge').innerHTML = `<span aria-hidden="true">✦</span> LEVEL 0${level}`;
+  $('.game-card').setAttribute('aria-label', level === 1 ? 'Tasten-Sprint' : 'Tastentricks-Übung');
+  $('.mission-bar>span:first-child').innerHTML = `<span class="live-dot"></span> ${level === 1 ? 'TASTEN-SPRINT' : 'TASTENTRICKS'}`;
+  $('.progress-track').setAttribute('aria-valuemax', String(targetCount));
+  $('.progress-track').setAttribute('aria-valuenow', String(shownIndex));
+  $('.progress-track').setAttribute('aria-label', level === 1 ? 'Gefundene verschiedene Tasten' : 'Gelöste Übungen');
+  $('#progress-fill').style.width = `${shownIndex / targetCount * 100}%`;
+  if (level === 1) {
+    $('#mission-count').textContent = active
+      ? `${Math.max(0, Math.ceil((deadline - Date.now()) / 1000))} Sek. · ${index} / ${missions.length} Tasten`
+      : `${index} / ${missions.length} Tasten · Bestleistung: ${best}`;
+  } else {
+    $('#mission-count').textContent = `${index} / ${level2Exercises.length} Übungen`;
+  }
+
+  $('#game').classList.toggle('is-success', active && index > 0);
   $('#game').classList.toggle('is-complete', complete);
   $('#hint-button').hidden = !active;
   $('#action-button').hidden = active;
-  $('#restart-button').hidden = phase === 'ready' && index === 0;
-  $('#screen-mode').disabled = feedback;
-  $('#keyboard-caption').textContent = mode === 'screen'
-    ? 'Bildschirmmodus: Tippe die gesuchte Taste hier unten an.'
-    : 'Drücke die Tasten auf deiner echten Tastatur.';
+  $('#restart-button').hidden = phase === 'ready';
+  $('#level-back-button').hidden = level !== 2;
+  $('#screen-mode').disabled = level === 2 || active;
+  $('#keyboard-caption').textContent = level === 2
+    ? 'Level 2: Übe die Kombinationen auf deiner echten Tastatur.'
+    : mode === 'screen'
+      ? 'Bildschirmmodus: Tippe die gesuchte Taste hier unten an.'
+      : 'Drücke die Tasten auf deiner echten Tastatur.';
+  $('#keyboard-pressed-legend').hidden = level === 2;
+  $('#practice-field').hidden = level !== 2;
+  $('#practice-field').setAttribute('aria-label', 'Übungsfeld für Tastenkombinationen');
   keyElements.forEach(key => {
-    key.disabled = mode !== 'screen' || !active;
-    key.classList.toggle('hinted', hinted && key.dataset.key === mission.key && active);
+    key.disabled = level !== 1 || mode !== 'screen' || !active;
+    const mission = level === 1 ? runOrder[index] : null;
+    key.classList.toggle('hinted', hinted && key.dataset.key === mission?.key && active);
   });
-  if (complete) {
-    $('#challenge-label').textContent = 'LEVEL 01 · GESCHAFFT!';
-    $('#prompt').textContent = 'Du bist ein Tastenprofi!';
-    $('#target-symbol').textContent = '★';
-    $('#task-description').textContent = mode === 'screen'
-      ? '12 Tasten auf dem Bildschirm entdeckt. Probiere sie als Nächstes auf einer echten Tastatur aus!'
-      : `12 Tasten entdeckt! ${missions.at(-1).fact}`;
-    $('#action-button').innerHTML = 'Noch einmal spielen <span aria-hidden="true">↻</span>';
-    $('#mascot-message').textContent = 'High five! Das hast du toll gemacht.';
-  } else if (active) {
-    $('#challenge-label').textContent = `AUFGABE ${index + 1} VON ${missions.length}`;
-    $('#prompt').textContent = `Finde die ${mission.name}.`;
-    $('#target-symbol').textContent = mission.symbol;
-    $('#task-description').textContent = mode === 'screen' ? 'Tippe sie auf der Bildschirmtastatur an.' : 'Drücke sie auf deiner Tastatur.';
-    $('#mascot-message').textContent = index === 0 ? 'Schau in Ruhe. Du findest sie!' : 'Eine neue Taste, eine neue Superkraft.';
-  } else if (feedback) {
-    const previous = missions[index - 1];
-    $('#challenge-label').textContent = 'RICHTIG GEFUNDEN!';
-    $('#prompt').textContent = `Das ist die ${previous.name}.`;
-    $('#target-symbol').textContent = previous.symbol;
-    $('#task-description').textContent = previous.fact;
-    $('#action-button').innerHTML = `Nächste Taste <span aria-hidden="true">→</span>`;
-    $('#mascot-message').textContent = 'Gut gemacht! Wieder etwas gelernt.';
+  $('#level-1-nav').disabled = false;
+  $('#level-2-nav').disabled = !levelState.level2Unlocked;
+  $('#level-1-nav').closest('li').classList.toggle('current', level === 1);
+  $('#level-2-nav').closest('li').classList.toggle('current', level === 2);
+  $('#level-1-nav').setAttribute('aria-current', level === 1 ? 'step' : 'false');
+  $('#level-2-nav').setAttribute('aria-current', level === 2 ? 'step' : 'false');
+  $('#level-2-nav').closest('li').classList.toggle('locked', !levelState.level2Unlocked);
+  $('#level-1-nav').querySelector('small').textContent = level === 1 ? 'Du bist hier' : `Bestleistung: ${best} / ${missions.length}`;
+  $('#level-2-nav').querySelector('small').textContent = !levelState.level2Unlocked
+    ? 'Nach Level 1 freigeschaltet'
+    : level === 2 ? 'Du bist hier' : 'Kombinationen üben';
+
+  if (level === 1) {
+    $('#keyboard-title').textContent = 'Deine Tastatur im Überblick';
+    if (complete) {
+      $('#challenge-label').textContent = index === missions.length ? 'ALLE TASTEN GEFUNDEN!' : 'DIE ZEIT IST UM!';
+      $('#prompt').textContent = index === missions.length ? 'Was für ein Tastensprint!' : `Du hast ${index} Tasten gefunden!`;
+      $('#target-symbol').textContent = '★';
+      $('#task-description').textContent = `Bestleistung in diesem Modus: ${Math.max(best, index)} von ${missions.length} verschiedenen Tasten. ${index === missions.length ? 'Level 2 ist jetzt freigeschaltet!' : 'Versuch es noch einmal und knacke deine Bestleistung.'}`;
+      $('#action-button').innerHTML = 'Weiter zu Level 2 <span aria-hidden="true">→</span>';
+      $('#mascot-message').textContent = 'Stark! Jetzt kommen die Tastentricks.';
+    } else if (active) {
+      const mission = runOrder[index];
+      $('#challenge-label').textContent = `TASTE ${index + 1} VON ${missions.length} · NOCH ${Math.max(0, Math.ceil((deadline - Date.now()) / 1000))} SEK.`;
+      $('#prompt').textContent = `Finde die ${mission.name}.`;
+      $('#target-symbol').textContent = mission.symbol;
+      $('#task-description').textContent = mode === 'screen' ? 'Tippe sie auf der Bildschirmtastatur an.' : 'Drücke sie auf deiner Tastatur. Danach geht es sofort weiter!';
+      $('#mascot-message').textContent = 'Schau genau hin – und weiter zur nächsten Taste!';
+      $('#action-button').innerHTML = 'Sprint starten <span aria-hidden="true">→</span>';
+    } else {
+      $('#challenge-label').textContent = 'BEREIT FÜR DEN TASTEN-SPRINT?';
+      $('#prompt').textContent = 'Wie viele Tasten schaffst du?';
+      $('#target-symbol').textContent = '60″';
+      $('#task-description').textContent = `Finde in 1 Minute möglichst viele verschiedene Tasten. Deine Bestleistung: ${best} von ${missions.length}.`;
+      $('#action-button').innerHTML = 'Sprint starten <span aria-hidden="true">→</span>';
+      $('#mascot-message').textContent = 'Eine Minute, viele Tasten. Los geht’s!';
+    }
   } else {
-    $('#challenge-label').textContent = index ? 'SCHÖN, DASS DU WIEDER DA BIST!' : 'BEREIT, DEINE TASTATUR ZU ENTDECKEN?';
-    $('#prompt').textContent = index ? 'Dein Abenteuer geht weiter.' : 'Dein Abenteuer beginnt hier.';
-    $('#target-symbol').textContent = '⎵';
-    $('#task-description').textContent = index ? `${index} Tasten kennst du schon. Weiter geht’s mit Taste ${index + 1}!` : 'Finde 12 Tasten auf deiner Tastatur. Du hast alle Zeit der Welt.';
-    $('#action-button').innerHTML = `${index ? 'Mission fortsetzen' : 'Mission starten'} <span aria-hidden="true">→</span>`;
-    $('#mascot-message').textContent = 'Hey! Ich bin Pixel. Wir schaffen das zusammen!';
+    const commandLabel = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Strg';
+    if (complete) {
+      $('#challenge-label').textContent = 'LEVEL 02 · GESCHAFFT!';
+      $('#prompt').textContent = 'Du kennst die Tastentricks!';
+      $('#target-symbol').textContent = '★';
+      $('#task-description').textContent = `${level2Exercises.length} Übungen geschafft: Kopieren, Einfügen, Rückgängig, Sonderzeichen und mehr.`;
+      $('#action-button').innerHTML = 'Level 2 noch einmal üben <span aria-hidden="true">↻</span>';
+      $('#mascot-message').textContent = 'Richtig gut! Jetzt bist du noch schneller.';
+    } else if (active) {
+      $('#challenge-label').textContent = `AUFGABE ${index + 1} VON ${level2Exercises.length}`;
+      $('#prompt').textContent = exercise.title;
+      $('#target-symbol').textContent = exercise.type === 'shortcut'
+        ? (/Mac|iPhone|iPad/.test(navigator.platform) && exercise.macSymbol
+          ? exercise.macSymbol
+          : exercise.symbol.replace('Strg', commandLabel))
+        : exercise.symbol;
+      $('#task-description').textContent = exercise.description;
+      $('#action-button').innerHTML = 'Level 2 starten <span aria-hidden="true">→</span>';
+      $('#mascot-message').textContent = 'Probier es direkt im Übungsfeld aus!';
+    } else {
+      $('#challenge-label').textContent = 'LEVEL 02 · TASTENKOMBINATIONEN';
+      $('#prompt').textContent = 'Bereit für Tastentricks?';
+      $('#target-symbol').textContent = 'Strg + ?';
+      $('#task-description').textContent = 'Übe Kopieren, Einfügen, Rückgängig sowie Shift- und AltGr-Zeichen direkt im Textfeld.';
+      $('#action-button').innerHTML = 'Level 2 starten <span aria-hidden="true">→</span>';
+      $('#mascot-message').textContent = 'Zwei oder mehr Tasten können zusammenarbeiten!';
+    }
   }
 }
 
 function begin() {
+  clearTimer();
+  hinted = false;
+  index = 0;
   phase = 'active';
+  $('#feedback').textContent = '';
+  if (level === 1) {
+    runOrder = [...missions];
+    for (let i = runOrder.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [runOrder[i], runOrder[j]] = [runOrder[j], runOrder[i]];
+    }
+    deadline = Date.now() + levelDurationSeconds * 1000;
+  }
+  render();
+  if (level === 1) {
+    timerId = setInterval(updateTimer, 200);
+    $('#game').focus({ preventScroll: true });
+  } else {
+    $('#practice-field').focus({ preventScroll: true });
+  }
+}
+
+function unlockLevel2() {
+  if (levelState.level2Unlocked) return;
+  levelState.level2Unlocked = true;
+  saveLevelState();
+}
+
+function finishLevel1() {
+  if (level !== 1 || phase !== 'active') return;
+  clearTimer();
+  phase = 'complete';
+  if (index > saved[mode]) {
+    saved[mode] = index;
+    saveProgress();
+  }
+  unlockLevel2();
+  render();
+  $('#feedback').textContent = index === missions.length
+    ? 'Alle verschiedenen Tasten gefunden. Level 2 ist freigeschaltet!'
+    : 'Zeit! Deine nächste Runde kann deine Bestleistung schlagen.';
+  $('#action-button').focus({ preventScroll: true });
+}
+
+function answerKey(event) {
+  if (phase !== 'active' || !runOrder[index]) return;
+  if (matchesKey(event, runOrder[index])) {
+    const found = runOrder[index];
+    index += 1;
+    if (index > saved[mode]) {
+      saved[mode] = index;
+      saveProgress();
+    }
+    hinted = false;
+    if (index === missions.length) {
+      finishLevel1();
+      return;
+    }
+    render();
+    $('#feedback').textContent = `${found.name} gefunden! Weiter geht’s.`;
+  } else {
+    $('#feedback').textContent = 'Noch nicht ganz. Schau weiter – die Zeit läuft!';
+    $('#mascot-message').textContent = 'Kein Problem. Versuch’s noch einmal!';
+  }
+}
+
+function answerExercise(event) {
+  const exercise = currentExercise();
+  if (phase !== 'active' || !exercise || !matchesExercise(event, exercise)) return;
+  index += 1;
+  hinted = false;
+  if (index === level2Exercises.length) {
+    phase = 'complete';
+    render();
+    $('#feedback').textContent = 'Level 2 geschafft! Du hast alle Tastentricks ausprobiert.';
+    $('#action-button').focus({ preventScroll: true });
+    return;
+  }
+  render();
+  $('#feedback').textContent = `${exercise.symbol} geschafft! Weiter zur nächsten Übung.`;
+}
+
+function selectLevel(nextLevel) {
+  if (nextLevel === 2 && !levelState.level2Unlocked) return;
+  clearTimer();
+  clearKeys();
+  level = nextLevel;
+  phase = 'ready';
+  index = 0;
   hinted = false;
   $('#feedback').textContent = '';
   render();
   $('#game').focus({ preventScroll: true });
 }
 
-function answer(event) {
-  if (phase !== 'active' || event.repeat || event.isComposing) return;
-  if (matchesKey(event, missions[index])) {
-    const found = missions[index];
-    index += 1;
-    phase = index === missions.length ? 'complete' : 'feedback';
-    hinted = false;
-    save();
-    render();
-    $('#feedback').textContent = index === missions.length ? 'Alle 12 Tasten gefunden. Level geschafft!' : `Treffer! ${found.name} gefunden.`;
-    $('#action-button').focus({ preventScroll: true });
-  } else {
-    $('#feedback').textContent = 'Noch nicht ganz. Schau in Ruhe weiter – du schaffst das!';
-    $('#mascot-message').textContent = 'Kein Problem. Versuch’s noch einmal!';
-  }
-}
-
 $('#action-button').addEventListener('click', () => {
-  if (index === missions.length) { index = 0; save(); }
+  if (level === 1 && phase === 'complete') {
+    selectLevel(2);
+    begin();
+    return;
+  }
   begin();
 });
-$('#restart-button').addEventListener('click', () => { index = 0; save(); clearKeys(); begin(); });
+$('#restart-button').addEventListener('click', begin);
+$('#level-back-button').addEventListener('click', () => selectLevel(1));
+$('#level-1-nav').addEventListener('click', () => selectLevel(1));
+$('#level-2-nav').addEventListener('click', () => selectLevel(2));
 $('#hint-button').addEventListener('click', () => {
   hinted = true;
   render();
-  $('#feedback').textContent = missions[index].hint;
-  $('#game').focus({ preventScroll: true });
+  $('#feedback').textContent = level === 1 ? runOrder[index].hint : currentExercise().hint;
+  if (level === 2) $('#practice-field').focus({ preventScroll: true });
+  else $('#game').focus({ preventScroll: true });
 });
 $('#screen-mode').addEventListener('change', event => {
   mode = event.target.checked ? 'screen' : 'keyboard';
-  index = saved[mode];
   phase = 'ready';
+  index = 0;
   hinted = false;
   clearKeys();
   $('#feedback').textContent = '';
@@ -164,26 +349,28 @@ $('#screen-mode').addEventListener('change', event => {
 
 window.addEventListener('keydown', event => {
   if ($('#help-dialog').open || event.isComposing) return;
+  const target = event.target;
+  if (level === 2 && target === $('#practice-field')) {
+    if (phase === 'active') answerExercise(event);
+    return;
+  }
   // Keep navigation, browser shortcuts and focused controls available.
   if (event.key === 'Tab' || event.altKey || event.metaKey || (event.ctrlKey && event.key !== 'Control')) return;
-  const target = event.target;
   if (target instanceof Element && target.closest('button, input, textarea, select, a, [contenteditable="true"]')) {
-    // A held answer key must not accidentally activate the newly focused next button.
     if (held.has(event.key.toLowerCase()) && ['Enter', ' '].includes(event.key)) event.preventDefault();
     return;
   }
-  const key = event.key.toLowerCase();
-  if (mode !== 'keyboard' || phase !== 'active') return;
+  if (level !== 1 || mode !== 'keyboard' || phase !== 'active') return;
   // Function keys remain available for browser help, reload and developer tools.
   if (/^F\d+$/.test(event.key)) return;
+  const key = event.key.toLowerCase();
   if (keyElements.some(element => element.dataset.key.toLowerCase() === key)) event.preventDefault();
   if (held.has(key) || event.repeat) return;
   held.add(key);
   keyElements.forEach(element => element.classList.toggle('pressed', element.dataset.key.toLowerCase() === key));
-  answer(event);
+  answerKey(event);
 });
 window.addEventListener('keyup', event => {
-  // Space activates buttons on keyup; suppress the release of the just-solved answer.
   if (held.has(event.key.toLowerCase()) && event.key === ' ' && phase === 'feedback') event.preventDefault();
   held.delete(event.key.toLowerCase());
   keyElements.forEach(element => { if (element.dataset.key.toLowerCase() === event.key.toLowerCase()) element.classList.remove('pressed'); });
@@ -192,6 +379,11 @@ window.addEventListener('blur', clearKeys);
 document.addEventListener('visibilitychange', () => { if (document.hidden) clearKeys(); });
 $('#help-open').addEventListener('click', () => { clearKeys(); $('#help-dialog').showModal(); });
 $('#help-close').addEventListener('click', () => $('#help-dialog').close());
-$('#help-dialog').addEventListener('close', () => { if (phase === 'active') $('#game').focus({ preventScroll: true }); });
+$('#help-dialog').addEventListener('close', () => {
+  if (phase === 'active') {
+    if (level === 1) $('#game').focus({ preventScroll: true });
+    else $('#practice-field').focus({ preventScroll: true });
+  }
+});
 updateSaveNote();
 render();

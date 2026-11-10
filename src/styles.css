@@ -213,6 +213,29 @@ button:disabled {
   color:#6750b8;
 }
 
+.level-link {
+  min-width:0;
+  flex:1;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+}
+
+.level-link:disabled {
+  cursor:not-allowed;
+}
+
+.level-link:not(:disabled):hover strong {
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
+.level-list li.locked {
+  opacity:.72;
+}
+
 .level-number {
   font-family:ui-monospace,monospace;
   font-size:11px;
@@ -553,6 +576,29 @@ h1>span {
   margin:15px auto 0;
   max-width:360px;
   min-height:42px;
+}
+
+#practice-field {
+  display:block;
+  width:min(100%,360px);
+  min-height:72px;
+  margin:12px auto 0;
+  padding:10px 12px;
+  resize:vertical;
+  border:1px solid #d5c9e6;
+  border-radius:8px;
+  background:#fff;
+  color:#514660;
+  font:12px/1.6 ui-monospace,monospace;
+}
+
+#practice-field[hidden] {
+  display:none;
+}
+
+#practice-field:focus-visible {
+  outline:3px solid #a48bd0;
+  outline-offset:2px;
 }
 
 .feedback {

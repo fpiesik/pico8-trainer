@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { missions, matchesKey, readProgress, keyboardRows } from '../src/game.js';
+import {
+  missions,
+  levelDurationSeconds,
+  level2Exercises,
+  matchesKey,
+  matchesExercise,
+  readProgress,
+  keyboardRows,
+} from '../src/game.js';
 
 test('jede Mission hat eine erreichbare Taste und eine Erklärung', () => {
   assert.equal(missions.length, 12);
@@ -29,6 +37,39 @@ test('falsche Tasten, gehaltene Tasten, IME und Browserkürzel zählen nicht', (
   }
   assert.ok(matchesKey({ key: 'Control', ctrlKey: true }, missions.find(m => m.key === 'Control')));
   assert.ok(matchesKey({ key: 'Shift', shiftKey: true }, missions.find(m => m.key === 'Shift')));
+});
+
+test('Level 1 ist ein einminütiger Sprint und Level 2 übt Tastenkürzel und Doppelbelegungen', () => {
+  assert.equal(levelDurationSeconds, 60);
+  assert.ok(level2Exercises.some(exercise => exercise.type === 'shortcut' && exercise.key === 'a'));
+  for (const key of ['c', 'v', 'x', 'z', 'y']) {
+    assert.ok(level2Exercises.some(exercise => exercise.type === 'shortcut' && exercise.key === key));
+  }
+  for (const key of ['_', '=', '?', '(', ')', '*', '[', ']', '{', '}', '@', '€', '\\']) {
+    assert.ok(level2Exercises.some(exercise => exercise.key === key));
+  }
+});
+
+test('Tastenkürzel und Zeichenkombinationen reagieren nur auf die richtige Belegung', () => {
+  const selectAll = level2Exercises.find(exercise => exercise.key === 'a');
+  const underscore = level2Exercises.find(exercise => exercise.key === '_');
+  const leftBracket = level2Exercises.find(exercise => exercise.key === '[');
+  const redo = level2Exercises.find(exercise => exercise.key === 'y');
+
+  assert.equal(matchesExercise({ key: 'a', ctrlKey: true }, selectAll), true);
+  assert.equal(matchesExercise({ key: 'a', metaKey: true }, selectAll), true);
+  assert.equal(matchesExercise({ key: 'a', ctrlKey: true, shiftKey: true }, selectAll), false);
+  assert.equal(matchesExercise({ key: 'a' }, selectAll), false);
+  assert.equal(matchesExercise({ key: 'y', ctrlKey: true }, redo), true);
+  assert.equal(matchesExercise({ key: 'z', metaKey: true, shiftKey: true }, redo), true);
+  assert.equal(matchesExercise({ key: '_', shiftKey: true }, underscore), true);
+  assert.equal(matchesExercise({ key: '-', shiftKey: true }, underscore), false);
+  assert.equal(matchesExercise({ key: '[', ctrlKey: true, altKey: true }, leftBracket), true);
+  assert.equal(matchesExercise({
+    key: '[',
+    getModifierState: name => name === 'AltGraph',
+  }, leftBracket), true);
+  assert.equal(matchesExercise({ key: '[', altKey: true }, leftBracket), true);
 });
 
 test('Fortschritt wird getrennt für echte und Bildschirmtastatur gelesen', () => {
