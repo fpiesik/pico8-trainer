@@ -255,9 +255,6 @@ function begin() {
   if (level === 1) {
     timerId = setInterval(updateTimer, 30);
     $('#game').focus({ preventScroll: true });
-  } else if (window.matchMedia('(max-width: 560px) and (max-height: 500px)').matches) {
-    $('#game').focus({ preventScroll: true });
-    window.scrollTo(0, 0);
   } else {
     $('#practice-field').focus({ preventScroll: true });
   }
