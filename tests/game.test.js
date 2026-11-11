@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   missions,
-  levelDurationSeconds,
   level2Exercises,
   matchesKey,
   matchesExercise,
+  readBestTimes,
   readProgress,
   keyboardRows,
 } from '../src/game.js';
@@ -39,8 +39,7 @@ test('falsche Tasten, gehaltene Tasten, IME und Browserkürzel zählen nicht', (
   assert.ok(matchesKey({ key: 'Shift', shiftKey: true }, missions.find(m => m.key === 'Shift')));
 });
 
-test('Level 1 ist ein einminütiger Sprint und Level 2 übt Tastenkürzel und Doppelbelegungen', () => {
-  assert.equal(levelDurationSeconds, 60);
+test('Level 2 übt Tastenkürzel und Shift- sowie AltGr-Doppelbelegungen', () => {
   assert.ok(level2Exercises.some(exercise => exercise.type === 'shortcut' && exercise.key === 'a'));
   for (const key of ['c', 'v', 'x', 'z', 'y']) {
     assert.ok(level2Exercises.some(exercise => exercise.type === 'shortcut' && exercise.key === key));
@@ -48,6 +47,20 @@ test('Level 1 ist ein einminütiger Sprint und Level 2 übt Tastenkürzel und Do
   for (const key of ['_', '=', '?', '(', ')', '*', '[', ']', '{', '}', '@', '€', '\\']) {
     assert.ok(level2Exercises.some(exercise => exercise.key === key));
   }
+});
+
+test('Bestzeiten werden als positive Zeitwerte getrennt pro Eingabemodus gelesen', () => {
+  assert.deepEqual(readBestTimes('{"version":1,"keyboard":34.57,"screen":51.2}'), {
+    keyboard: 34.57,
+    screen: 51.2,
+  });
+  for (const raw of [null, '', 'kaputt', '{"version":2,"keyboard":24}']) {
+    assert.deepEqual(readBestTimes(raw), { keyboard: 0, screen: 0 });
+  }
+  assert.deepEqual(readBestTimes('{"version":1,"keyboard":-2,"screen":"12"}'), {
+    keyboard: 0,
+    screen: 0,
+  });
 });
 
 test('Tastenkürzel und Zeichenkombinationen reagieren nur auf die richtige Belegung', () => {

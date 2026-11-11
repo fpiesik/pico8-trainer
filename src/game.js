@@ -13,8 +13,6 @@ export const missions = [
   { key: 'z', name: 'Taste Z', symbol: 'Z', hint: 'Auf einer deutschen Tastatur liegt Z zwischen T und U. Auf anderen Tastaturen findest du es manchmal unten links.', fact: 'Geschafft! Z begegnet dir später wieder: zum Beispiel bei Strg + Z zum Rückgängigmachen.' },
 ];
 
-export const levelDurationSeconds = 60;
-
 export const level2Exercises = [
   { type: 'shortcut', key: 'a', symbol: 'Strg + A', title: 'Markiere den ganzen Text.', description: 'Klicke ins Übungsfeld und probiere die Tastenkombination aus.', hint: 'Halte Strg gedrückt und tippe A. Auf dem Mac nimmst du ⌘ statt Strg.', fact: 'Alles auswählen markiert den gesamten Text im Feld.', modifier: 'command' },
   { type: 'shortcut', key: 'c', symbol: 'Strg + C', title: 'Kopiere den markierten Text.', description: 'Der Text ist noch markiert. Kopiere ihn ins Clipboard.', hint: 'Halte Strg gedrückt und tippe C. Auf dem Mac nimmst du ⌘ statt Strg.', fact: 'Kopieren legt eine Auswahl in die Zwischenablage, ohne sie zu entfernen.', modifier: 'command' },
@@ -72,6 +70,17 @@ export function readProgress(raw) {
     const value = JSON.parse(raw);
     if (value?.version !== 1) return { keyboard: 0, screen: 0 };
     const valid = n => Number.isInteger(n) && n >= 0 && n <= missions.length ? n : 0;
+    return { keyboard: valid(value.keyboard), screen: valid(value.screen) };
+  } catch {
+    return { keyboard: 0, screen: 0 };
+  }
+}
+
+export function readBestTimes(raw) {
+  try {
+    const value = JSON.parse(raw);
+    if (value?.version !== 1) return { keyboard: 0, screen: 0 };
+    const valid = n => typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : 0;
     return { keyboard: valid(value.keyboard), screen: valid(value.screen) };
   } catch {
     return { keyboard: 0, screen: 0 };

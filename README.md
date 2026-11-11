@@ -1,6 +1,6 @@
 # PICO Playground
 
-Ein deutschsprachiger Browser-Trainer für Fünftklässler auf dem Weg zum eigenen PICO-8-Spiel. Level 01 ist ein einminütiger Sprint, in dem möglichst viele verschiedene Tasten gefunden werden. Level 02 übt Tastenkürzel sowie Shift- und AltGr-Doppelbelegungen direkt in einem Textfeld.
+Ein deutschsprachiger Browser-Trainer für Fünftklässler auf dem Weg zum eigenen PICO-8-Spiel. Level 01 ist ein Tastensprint: Die Stoppuhr läuft, bis alle verschiedenen Tasten gefunden sind. Level 02 übt Tastenkürzel sowie Shift- und AltGr-Doppelbelegungen direkt in einem Textfeld.
 
 ## Lokal starten
 
@@ -32,7 +32,7 @@ Diese Adresse ist die vorgesehene Zieladresse; das Anlegen der lokalen Dateien a
 
 ## Lernen und Bedienung
 
-- Level 01: In 60 Sekunden werden bis zu zwölf verschiedene Tasten in zufälliger Reihenfolge gesucht. Nach jedem Treffer geht es automatisch weiter; die Bestleistung wird getrennt für echte Tastatur und Bildschirmmodus gespeichert.
+- Level 01: Zwölf verschiedene Tasten werden in zufälliger Reihenfolge gesucht. Die Stoppuhr stoppt erst nach dem letzten Treffer; nach jedem Treffer geht es automatisch weiter. Die Bestzeit wird getrennt für echte Tastatur und Bildschirmmodus gespeichert.
 - Level 02 wird nach dem ersten Sprint freigeschaltet und übt Strg/Command + A, C, V, X, Z und Y sowie Shift- und AltGr-Zeichen wie `_`, `=`, `?`, Klammern, `@` und `€`.
 - „Ein kleiner Tipp“ erklärt die gesuchte Taste oder Tastenkombination.
 - Level 1 funktioniert mit echter Tastatur oder im Bildschirmmodus. Level 2 benötigt eine echte Tastatur und nutzt ein lokales Textfeld zum Ausprobieren der Kürzel.
