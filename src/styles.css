@@ -1288,6 +1288,471 @@ main {
   .keyboard-key {
     height:34px;
   }
+}
+
+body {
+  min-width:0;
+  min-height:100vh;
+  background:#1d2b53;
+  color:#1d2b53;
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",monospace;
+}
+
+.site-header {
+  position:absolute;
+  z-index:5;
+  top:0;
+  right:0;
+  height:auto;
+  padding:16px 20px;
+  gap:20px;
+  border:0;
+  background:transparent;
+}
+
+.site-header .brand,
+.site-header .header-tag,
+.sidebar,
+.breadcrumb,
+.page-heading,
+.bottom-cards,
+.main-footer {
+  display:none;
+}
+
+.keyboard-section {
+  display:none;
+}
+
+body[data-mode="screen"] main {
+  flex-direction:column;
+  gap:20px;
+}
+
+body[data-mode="screen"] .keyboard-section {
+  display:block;
+  width:min(820px,100%);
+  margin:0;
+  color:#fff1e8;
+}
+
+body[data-mode="screen"] .section-heading {
+  margin-bottom:10px;
+}
+
+body[data-mode="screen"] .section-heading h2 {
+  color:#fff1e8;
+}
+
+body[data-mode="screen"] .section-heading p,
+body[data-mode="screen"] .keyboard-legend {
+  color:#c2c3c7;
+}
+
+body[data-level="2"] .mode-toggle {
+  display:none;
+}
+
+.workspace {
+  display:block;
+  max-width:none;
+  min-height:100vh;
+}
+
+main {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  max-width:none;
+  min-height:100vh;
+  margin:0;
+  padding:54px 24px 24px;
+}
+
+.game-card {
+  width:min(820px,100%);
+  border:3px solid #1d2b53;
+  border-radius:0;
+  background:#fff1e8;
+  box-shadow:8px 8px 0 #000;
+}
+
+.mission-bar {
+  justify-content:center;
+  height:36px;
+  padding:0 16px;
+  border-bottom:2px solid #1d2b53;
+  color:#5f574f;
+  background:#fff1e8;
+}
+
+.mission-bar>span:first-child {
+  display:none;
+}
+
+.mission-bar>span:last-child {
+  color:#5f574f;
+  font-family:inherit;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+
+body[data-level="2"] .mission-bar {
+  display:none;
+}
+
+.progress-track {
+  height:6px;
+  background:#c2c3c7;
+}
+
+.progress-track>div {
+  background:#00a8a8;
+  transition:width .12s linear;
+}
+
+.game-stage {
+  display:block;
+  min-height:0;
+  padding:clamp(34px,7vh,76px) clamp(20px,7vw,72px) 40px;
+  background:#fff1e8;
+}
+
+.mascot-side,
+.stage-spark {
+  display:none;
+}
+
+.challenge {
+  width:min(100%,660px);
+  margin:0 auto;
+}
+
+.challenge-label {
+  color:#5f574f;
+  font-size:12px;
+  letter-spacing:.12em;
+}
+
+.challenge h2 {
+  margin:16px 0 24px;
+  color:#1d2b53;
+  font-size:clamp(27px,4.2vw,42px);
+  font-weight:800;
+  letter-spacing:-.06em;
+  line-height:1.2;
+}
+
+.target-key {
+  min-width:190px;
+  height:88px;
+  margin:0 0 16px;
+  padding:0 28px;
+  border:3px solid #1d2b53;
+  border-radius:0;
+  background:#e0f8cf;
+  box-shadow:6px 6px 0 #1d2b53;
+  color:#008751;
+  font-size:clamp(32px,6vw,48px);
+  font-weight:800;
+  letter-spacing:-.06em;
+  white-space:nowrap;
+}
+
+.task-description {
+  max-width:620px;
+  min-height:0;
+  margin:20px auto 16px;
+  color:#5f574f;
+  font-size:15px;
+  line-height:1.65;
+}
+
+#practice-field {
+  width:100%;
+  min-height:112px;
+  margin:20px auto 14px;
+  padding:14px;
+  border:2px solid #83769c;
+  border-radius:0;
+  background:#fff;
+  color:#1d2b53;
+  font:14px/1.6 ui-monospace,"Cascadia Mono","Segoe UI Mono",monospace;
+}
+
+#practice-field:focus-visible {
+  outline:3px solid #29adff;
+  outline-offset:3px;
+}
+
+.feedback {
+  min-height:0;
+  margin:12px auto;
+  color:#5f574f;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.primary-button {
+  margin-top:12px;
+  padding:13px 20px;
+  border:2px solid #1d2b53;
+  border-radius:0;
+  background:#29adff;
+  box-shadow:4px 4px 0 #1d2b53;
+  color:#1d2b53;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:800;
+}
+
+.primary-button:hover {
+  background:#1d8ed1;
+}
+
+.primary-button:active {
+  box-shadow:1px 1px 0 #1d2b53;
+}
+
+.text-button {
+  color:#5f574f;
+  font-family:inherit;
+  font-size:12px;
+  text-decoration-color:#83769c;
+}
+
+.hint-button {
+  margin-top:20px;
+}
+
+.game-footer {
+  justify-content:center;
+  min-height:48px;
+  padding:8px 20px 14px;
+  border-top:0;
+  background:#fff1e8;
+}
+
+.game-footer>span {
+  display:none;
+}
+
+.game-footer>.text-button {
+  margin:0 12px;
+  white-space:nowrap;
+}
+
+.is-success .target-key,
+.is-complete .target-key {
+  border-color:#1d2b53;
+  border-radius:0;
+}
+
+.is-success .target-key {
+  background:#e0f8cf;
+  box-shadow:6px 6px 0 #1d2b53;
+  color:#008751;
+}
+
+.is-complete .target-key {
+  background:#ffec27;
+  box-shadow:6px 6px 0 #1d2b53;
+  color:#1d2b53;
+}
+
+.icon-button {
+  width:36px;
+  height:36px;
+  border:2px solid #fff1e8;
+  border-radius:0;
+  background:#1d2b53;
+  color:#fff1e8;
+  box-shadow:3px 3px 0 #000;
+}
+
+.icon-button:hover {
+  background:#29adff;
+  color:#1d2b53;
+}
+
+.mode-toggle {
+  padding:8px 10px;
+  border:2px solid #fff1e8;
+  background:#1d2b53;
+  box-shadow:3px 3px 0 #000;
+  color:#fff1e8;
+  font-family:inherit;
+  font-size:11px;
+}
+
+.mode-toggle .switch {
+  background:#5f574f;
+}
+
+.mode-toggle input:checked+.switch {
+  background:#00a8a8;
+}
+
+.mode-toggle input:focus-visible+.switch {
+  outline-color:#29adff;
+}
+
+.mode-toggle input:disabled~* {
+  opacity:.65;
+}
+
+dialog {
+  border:3px solid #1d2b53;
+  border-radius:0;
+  background:#fff1e8;
+  box-shadow:8px 8px 0 #000;
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",monospace;
+}
+
+dialog::backdrop {
+  background:#1d2b53cc;
+  backdrop-filter:none;
+}
+
+@media(max-width:560px) {
+  .site-header {
+    padding:10px;
+    gap:8px;
+  }
+
+  main {
+    align-items:flex-start;
+    padding:64px 14px 18px;
+  }
+
+  .game-card {
+    box-shadow:5px 5px 0 #000;
+  }
+
+  .mission-bar {
+    height:32px;
+  }
+
+  .mission-bar>span:last-child {
+    font-size:10px;
+  }
+
+  .game-stage {
+    padding:34px 18px 26px;
+  }
+
+  .challenge-label {
+    font-size:10px;
+  }
+
+  .challenge h2 {
+    margin:14px 0 22px;
+    font-size:clamp(25px,7vw,32px);
+  }
+
+  .target-key {
+    min-width:156px;
+    height:72px;
+    padding:0 18px;
+    font-size:clamp(30px,8vw,40px);
+  }
+
+  .task-description {
+    font-size:13px;
+  }
+
+  #practice-field {
+    min-height:92px;
+    font-size:12px;
+  }
+
+  .game-footer {
+    padding:8px 12px 12px;
+  }
+
+  .mode-toggle {
+    padding:6px 7px;
+    font-size:10px;
+  }
+}
+
+@media(max-width:560px) and (max-height:500px) {
+  main {
+    padding:54px 12px 12px;
+  }
+
+  .game-card {
+    box-shadow:4px 4px 0 #000;
+  }
+
+  .mission-bar {
+    height:28px;
+  }
+
+  .game-stage {
+    padding:17px 14px 12px;
+  }
+
+  .challenge-label {
+    font-size:9px;
+  }
+
+  .challenge h2 {
+    margin:9px 0 14px;
+    font-size:clamp(22px,6vw,27px);
+  }
+
+  .target-key {
+    min-width:138px;
+    height:58px;
+    margin-bottom:8px;
+    padding:0 12px;
+    font-size:clamp(26px,7vw,32px);
+    box-shadow:4px 4px 0 #1d2b53;
+  }
+
+  .task-description {
+    margin:9px auto 8px;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  #practice-field {
+    min-height:64px;
+    margin:9px auto 7px;
+    padding:9px;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .feedback {
+    margin:5px auto;
+    font-size:10px;
+    line-height:1.4;
+  }
+
+  .hint-button {
+    margin-top:8px;
+    font-size:10px;
+  }
+
+  .game-footer {
+    min-height:34px;
+    padding:3px 8px 8px;
+  }
+
+  .game-footer>.text-button {
+    margin:0 7px;
+    font-size:10px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .progress-track>div {
+    transition:none;
+  }
   .keyboard-legend {
     flex-direction:column;
     gap:5px;

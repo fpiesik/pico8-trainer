@@ -124,6 +124,9 @@ function render() {
   const shownIndex = Math.min(index, targetCount);
   const best = bestTimes[mode];
 
+  document.body.dataset.level = String(level);
+  document.body.dataset.mode = mode;
+  document.body.dataset.phase = phase;
   $('.breadcrumb strong').textContent = `Level 0${level}`;
   $('.page-heading .eyebrow').textContent = level === 1 ? 'DEIN ERSTER SCHRITT' : 'ZEIT FÜR TASTENTRICKS';
   $('.page-heading h1').innerHTML = level === 1 ? 'Finde die Taste<span>.</span>' : 'Coole Tastentricks<span>.</span>';
@@ -252,6 +255,9 @@ function begin() {
   if (level === 1) {
     timerId = setInterval(updateTimer, 30);
     $('#game').focus({ preventScroll: true });
+  } else if (window.matchMedia('(max-width: 560px) and (max-height: 500px)').matches) {
+    $('#game').focus({ preventScroll: true });
+    window.scrollTo(0, 0);
   } else {
     $('#practice-field').focus({ preventScroll: true });
   }
@@ -316,6 +322,7 @@ function selectLevel(nextLevel) {
   if (nextLevel === 2 && !levelState.level2Unlocked) return;
   clearTimer();
   clearKeys();
+  window.scrollTo(0, 0);
   level = nextLevel;
   phase = 'ready';
   index = 0;
